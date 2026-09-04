@@ -1,6 +1,8 @@
 import { io } from "socket.io-client";
 
-const socket = io("https://youtube-watch-party-system-bdjb.onrender.com", {
+const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+const socket = io(apiUrl, {
   autoConnect: false,
 });
 
