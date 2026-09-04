@@ -1,7 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
-import AuthProvider from "./context/AuthContex.jsx";
+import AuthProvider from "./Context/AuthContex.jsx";
 import "./index.css";
 
 ReactDOM.createRoot(

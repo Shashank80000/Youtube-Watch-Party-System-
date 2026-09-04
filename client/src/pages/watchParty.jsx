@@ -8,7 +8,7 @@ import VideoPlayer from "../components/videoPlayer";
 import VideoControls from "../components/videoControls";
 import ChangeVideo from "../components/changeVideo";
 import ParticipantItem from "../components/participentsItem";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/navbar";
 
 
 const WatchParty = () => {
