@@ -219,18 +219,21 @@ const currentRole =
   const handleSyncState = (data) => {
     console.log("Sync state:", data);
 
+    const videoChanged =
+      data.videoId && data.videoId !== room?.videoId;
+
     setRoom((previousRoom) => {
       if (!previousRoom) return previousRoom;
 
       return {
         ...previousRoom,
-          videoId: data.videoId || previousRoom.videoId,
+          videoId: data.videoId ?? previousRoom.videoId,
         playState: data.playState,
         currentTime: data.currentTime,
       };
     });
 
-    if (!player) return;
+    if (!player || videoChanged) return;
 
     if (data.currentTime !== undefined) {
       player.seekTo(data.currentTime, true);
@@ -248,7 +251,7 @@ const currentRole =
   return () => {
     socket.off("sync_state", handleSyncState);
   };
-}, [socket, player]);
+}, [socket, player, room?.videoId]);
 
 
   // Role assigned
