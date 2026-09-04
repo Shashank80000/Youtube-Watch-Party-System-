@@ -31,9 +31,8 @@ const WatchParty = () => {
   
   const currentUserId = user?._id || user?.id;
 
-const currentParticipant = room?.participants?.find(
-  (participant) =>
-    participant.userId === currentUserId?.toString()
+const currentParticipant = room?.participants?.find((participant) =>
+  String(participant.userId) === String(currentUserId)
 );
 
 const currentRole =
@@ -81,13 +80,11 @@ const currentRole =
 
     if (joiningRoomRef.current === roomId) return;
 
-    const currentUserId = (
-      user._id || user.id
-    ).toString();
+    const currentUserId = String(user._id || user.id);
 
     const alreadyParticipant = room.participants.some(
       (participant) =>
-        participant.userId === currentUserId
+        String(participant.userId) === currentUserId
     );
 
     if (alreadyParticipant) {
