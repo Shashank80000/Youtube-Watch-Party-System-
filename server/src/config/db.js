@@ -1,3 +1,6 @@
+import dns from "node:dns";
+dns.setServers(["8.8.8.8", "1.1.1.1"]); // Forces Node to bypass local laptop DNS restrictions
+
 import mongoose from "mongoose";
 
 const connectDB = async () => {
