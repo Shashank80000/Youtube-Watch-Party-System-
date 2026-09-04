@@ -573,6 +573,10 @@ const handleCopyRoomLink = async () => {
           <VideoPlayer
             key={room.videoId || "no-video"}
             videoId={room.videoId}
+            canControl={
+              currentRole === "host" ||
+              currentRole === "moderator"
+            }
             onPlayerReady={setPlayer}
           />
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-const VideoPlayer = ({ videoId, onPlayerReady }) => {
+const VideoPlayer = ({ videoId, canControl, onPlayerReady }) => {
   const playerRef = useRef(null);
   const containerRef = useRef(null);
   const [playerError, setPlayerError] = useState("");
@@ -31,7 +31,7 @@ const VideoPlayer = ({ videoId, onPlayerReady }) => {
 
           playerVars: {
             autoplay: 0,
-            controls: 1,
+            controls: canControl ? 1 : 0,
             enablejsapi: 1,
             modestbranding: 1,
             origin: window.location.origin,
@@ -105,7 +105,7 @@ const VideoPlayer = ({ videoId, onPlayerReady }) => {
         playerRef.current = null;
       }
     };
-  }, [videoId, onPlayerReady]);
+  }, [videoId, canControl, onPlayerReady]);
 
   if (!videoId) {
     return (
