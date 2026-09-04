@@ -14,14 +14,24 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.split(",").map((origin) => origin.trim())
+  : "*";
+
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: allowedOrigins,
+  },
+  transports: ["websocket", "polling"],
+  perMessageDeflate: false,
+  connectionStateRecovery: {
+    maxDisconnectionDuration: 2 * 60 * 1000,
+    skipMiddlewares: true,
   },
 });
 
