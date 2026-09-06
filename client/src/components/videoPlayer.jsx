@@ -3,7 +3,12 @@ import { useEffect, useRef, useState } from "react";
 const VideoPlayer = ({ videoId, canControl, onPlayerReady }) => {
   const playerRef = useRef(null);
   const containerRef = useRef(null);
+  const onPlayerReadyRef = useRef(onPlayerReady);
   const [playerError, setPlayerError] = useState("");
+
+  useEffect(() => {
+    onPlayerReadyRef.current = onPlayerReady;
+  }, [onPlayerReady]);
 
   useEffect(() => {
     if (!videoId) return;
@@ -43,7 +48,7 @@ const VideoPlayer = ({ videoId, canControl, onPlayerReady }) => {
               console.log("YouTube player ready");
 
               if (isMounted) {
-                onPlayerReady(event.target);
+                onPlayerReadyRef.current(event.target);
               }
             },
 
@@ -105,7 +110,7 @@ const VideoPlayer = ({ videoId, canControl, onPlayerReady }) => {
         playerRef.current = null;
       }
     };
-  }, [videoId, canControl, onPlayerReady]);
+  }, [videoId, canControl]);
 
   if (!videoId) {
     return (

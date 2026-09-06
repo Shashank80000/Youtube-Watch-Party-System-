@@ -1,14 +1,34 @@
 import Room from "../models/Room.js";
+import jwt from "jsonwebtoken";
 
 const socketHandler = (io) => {
+  io.use((socket, next) => {
+    const token = socket.handshake.auth?.token;
+
+    if (!token) {
+      next(new Error("Authentication required"));
+      return;
+    }
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      socket.data.authenticatedUserId = decoded.userId.toString();
+      next();
+    } catch (error) {
+      next(new Error("Invalid or expired token"));
+    }
+  });
+
   io.on("connection", (socket) => {
     console.log("Socket connected:", socket.id);
 
-    socket.on("join_room", async ({ roomId, userId, username }) => {
+    socket.on("join_room", async ({ roomId }) => {
       try {
-        if (!roomId || !userId || !username) {
+        const userId = socket.data.authenticatedUserId;
+
+        if (!roomId || !userId) {
           socket.emit("error", {
-            message: "roomId, userId and username are required",
+            message: "roomId and authenticated user are required",
           });
           return;
         }
@@ -29,7 +49,7 @@ const socketHandler = (io) => {
         if (!participant) {
           participant = {
             userId: userId.toString(),
-            username: username.trim(),
+            username: "Participant",
             role: "participant",
           };
 
@@ -40,7 +60,7 @@ const socketHandler = (io) => {
         socket.join(roomId);
 
         socket.data.roomId = roomId;
-        socket.data.userId = userId.toString();
+        socket.data.userId = userId;
 
         socket.emit("sync_state", {
           playState: room.playState,

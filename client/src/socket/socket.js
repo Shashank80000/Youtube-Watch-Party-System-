@@ -6,4 +6,10 @@ const socket = io(apiUrl, {
   autoConnect: false,
 });
 
+export const authenticateSocket = () => {
+  socket.auth = {
+    token: localStorage.getItem("token"),
+  };
+};
+
 export default socket;

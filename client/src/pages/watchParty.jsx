@@ -25,7 +25,6 @@ const WatchParty = () => {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
 
-  const remoteUpdateRef = useRef(false);
   const joiningRoomRef = useRef(null);
 
   
@@ -151,8 +150,6 @@ const currentRole =
 
     socket.emit("join_room", {
       roomId,
-      userId: user._id || user.id,
-      username: user.username,
     });
 
     return () => {
@@ -219,31 +216,17 @@ const currentRole =
   const handleSyncState = (data) => {
     console.log("Sync state:", data);
 
-    const videoChanged =
-      data.videoId && data.videoId !== room?.videoId;
-
     setRoom((previousRoom) => {
       if (!previousRoom) return previousRoom;
 
       return {
         ...previousRoom,
-          videoId: data.videoId ?? previousRoom.videoId,
+          videoId: data.videoId || previousRoom.videoId,
         playState: data.playState,
         currentTime: data.currentTime,
       };
     });
 
-    if (!player || videoChanged) return;
-
-    if (data.currentTime !== undefined) {
-      player.seekTo(data.currentTime, true);
-    }
-
-    if (data.playState === "playing") {
-      player.playVideo();
-    } else {
-      player.pauseVideo();
-    }
   };
 
   socket.on("sync_state", handleSyncState);
@@ -251,7 +234,23 @@ const currentRole =
   return () => {
     socket.off("sync_state", handleSyncState);
   };
-}, [socket, player, room?.videoId]);
+}, [socket]);
+
+  // Apply the room state after the YouTube player is ready or a new video loads.
+  useEffect(() => {
+    if (!player || !room) return;
+
+    if (typeof room.currentTime === "number") {
+      player.seekTo(room.currentTime, true);
+    }
+
+    if (room.playState === "playing") {
+      player.playVideo();
+    } else {
+      player.pauseVideo();
+    }
+
+  }, [player, room?.videoId, room?.playState, room?.currentTime]);
 
 
   // Role assigned
@@ -330,62 +329,6 @@ const currentRole =
   }, [socket, navigate]);
 
 
-
-  
-  useEffect(() => {
-  const handlePlay = (data) => {
-    if (!player) return;
-
-    remoteUpdateRef.current = true;
-
-    player.seekTo(data.currentTime || 0, true);
-    player.playVideo();
-
-    setTimeout(() => {
-      remoteUpdateRef.current = false;
-    }, 500);
-  };
-
-  const handlePause = (data) => {
-    if (!player) return;
-
-    remoteUpdateRef.current = true;
-
-    player.seekTo(data.currentTime || 0, true);
-    player.pauseVideo();
-
-    setTimeout(() => {
-      remoteUpdateRef.current = false;
-    }, 500);
-  };
-
-  const handleSeek = (data) => {
-    if (!player) return;
-
-    remoteUpdateRef.current = true;
-
-    player.seekTo(data.currentTime || 0, true);
-
-    setTimeout(() => {
-      remoteUpdateRef.current = false;
-    }, 500);
-  };
-
-  socket.on("play", handlePlay);
-  socket.on("pause", handlePause);
-  socket.on("seek", handleSeek);
-
-  return () => {
-    socket.off("play", handlePlay);
-    socket.off("pause", handlePause);
-    socket.off("seek", handleSeek);
-  };
-}, [socket, player]);
-
-
-
-
-
   // Loading
   if (loading) {
     return (
@@ -426,7 +369,7 @@ const currentRole =
 
 
   const handlePlay = () => {
-  if (!player) return;
+    if (!player || !["host", "moderator"].includes(currentRole)) return;
 
     player.unMute();
 
@@ -445,7 +388,7 @@ const currentRole =
 };
 
 const handlePause = () => {
-  if (!player) return;
+  if (!player || !["host", "moderator"].includes(currentRole)) return;
 
   player.pauseVideo();
 
@@ -456,7 +399,7 @@ const handlePause = () => {
 };
 
 const handleSeek = (time) => {
-  if (!player) return;
+  if (!player || !["host", "moderator"].includes(currentRole)) return;
 
   player.seekTo(time, true);
 
@@ -467,6 +410,8 @@ const handleSeek = (time) => {
 };
 
 const handleChangeVideo = (videoId) => {
+  if (!["host", "moderator"].includes(currentRole)) return;
+
   setPlayer(null);
   setRoom((previousRoom) => {
     if (!previousRoom) return previousRoom;

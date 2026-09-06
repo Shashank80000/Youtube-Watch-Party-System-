@@ -4,6 +4,11 @@ dns.setServers(["8.8.8.8", "1.1.1.1"]); // Forces Node to bypass local laptop DN
 import mongoose from "mongoose";
 
 const connectDB = async () => {
+  if (!process.env.MONGO_URI) {
+    console.error("MongoDB connection failed: MONGO_URI is not configured");
+    return;
+  }
+
   try {
     await mongoose.connect(process.env.MONGO_URI, {
       maxPoolSize: Number(process.env.MONGO_MAX_POOL_SIZE) || 50,
@@ -15,7 +20,6 @@ const connectDB = async () => {
     console.log("MongoDB connected successfully");
   } catch (error) {
     console.error("MongoDB connection failed:", error.message);
-    process.exit(1);
   }
 };
 
