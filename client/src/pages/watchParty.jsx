@@ -25,6 +25,7 @@ const WatchParty = () => {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
 
+  const remoteUpdateRef = useRef(false);
   const joiningRoomRef = useRef(null);
 
   
@@ -240,6 +241,8 @@ const currentRole =
   useEffect(() => {
     if (!player || !room) return;
 
+    remoteUpdateRef.current = true;
+
     if (typeof room.currentTime === "number") {
       player.seekTo(room.currentTime, true);
     }
@@ -249,6 +252,12 @@ const currentRole =
     } else {
       player.pauseVideo();
     }
+
+    const resetRemoteUpdate = window.setTimeout(() => {
+      remoteUpdateRef.current = false;
+    }, 500);
+
+    return () => window.clearTimeout(resetRemoteUpdate);
 
   }, [player, room?.videoId, room?.playState, room?.currentTime]);
 
@@ -381,10 +390,30 @@ const currentRole =
       player.playVideo();
     }
 
-  socket.emit("play", {
-    roomId,
-    currentTime: player.getCurrentTime(),
-  });
+};
+
+const handlePlaybackStateChange = (state, changedPlayer) => {
+  if (
+    !changedPlayer ||
+    !["host", "moderator"].includes(currentRole) ||
+    remoteUpdateRef.current
+  ) {
+    return;
+  }
+
+  if (state === 1) {
+    socket.emit("play", {
+      roomId,
+      currentTime: changedPlayer.getCurrentTime(),
+    });
+  }
+
+  if (state === 2) {
+    socket.emit("pause", {
+      roomId,
+      currentTime: changedPlayer.getCurrentTime(),
+    });
+  }
 };
 
 const handlePause = () => {
@@ -392,10 +421,6 @@ const handlePause = () => {
 
   player.pauseVideo();
 
-  socket.emit("pause", {
-    roomId,
-    currentTime: player.getCurrentTime(),
-  });
 };
 
 const handleSeek = (time) => {
@@ -523,6 +548,7 @@ const handleCopyRoomLink = async () => {
               currentRole === "moderator"
             }
             onPlayerReady={setPlayer}
+            onPlaybackStateChange={handlePlaybackStateChange}
           />
 
           <VideoControls

@@ -1,14 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 
-const VideoPlayer = ({ videoId, canControl, onPlayerReady }) => {
+const VideoPlayer = ({
+  videoId,
+  canControl,
+  onPlayerReady,
+  onPlaybackStateChange,
+}) => {
   const playerRef = useRef(null);
   const containerRef = useRef(null);
   const onPlayerReadyRef = useRef(onPlayerReady);
+  const onPlaybackStateChangeRef = useRef(onPlaybackStateChange);
   const [playerError, setPlayerError] = useState("");
 
   useEffect(() => {
     onPlayerReadyRef.current = onPlayerReady;
   }, [onPlayerReady]);
+
+  useEffect(() => {
+    onPlaybackStateChangeRef.current = onPlaybackStateChange;
+  }, [onPlaybackStateChange]);
 
   useEffect(() => {
     if (!videoId) return;
@@ -37,6 +47,7 @@ const VideoPlayer = ({ videoId, canControl, onPlayerReady }) => {
           playerVars: {
             autoplay: 0,
             controls: canControl ? 1 : 0,
+            disablekb: canControl ? 0 : 1,
             enablejsapi: 1,
             modestbranding: 1,
             origin: window.location.origin,
@@ -49,6 +60,12 @@ const VideoPlayer = ({ videoId, canControl, onPlayerReady }) => {
 
               if (isMounted) {
                 onPlayerReadyRef.current(event.target);
+              }
+            },
+
+            onStateChange: (event) => {
+              if (isMounted) {
+                onPlaybackStateChangeRef.current(event.data, event.target);
               }
             },
 
@@ -131,7 +148,7 @@ const VideoPlayer = ({ videoId, canControl, onPlayerReady }) => {
       ) : (
         <div
           ref={containerRef}
-          className="h-full w-full"
+          className={`h-full w-full ${canControl ? "" : "pointer-events-none"}`}
         />
       )}
     </div>
